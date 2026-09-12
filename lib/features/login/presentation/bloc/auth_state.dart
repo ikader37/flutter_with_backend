@@ -1,0 +1,44 @@
+import 'package:app_test_with_backend/features/login/domain/entities/UserEntity.dart';
+import 'package:equatable/equatable.dart';
+
+
+sealed class AuthState extends Equatable {
+  const AuthState();
+
+  @override
+  List<Object?> get props => [];
+}
+
+class AuthInitial extends AuthState {}
+class ProfilInitial extends AuthState {}
+
+class AuthLoading extends AuthState {}
+
+class AuthAuthenticated extends AuthState {
+  final UserEntity user;
+
+  const AuthAuthenticated(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}
+
+class AuthUnauthenticated extends AuthState {}
+
+class AuthError extends AuthState {
+  final String message;
+
+  const AuthError(this.message);
+
+  @override
+  List<Object?> get props => [message];
+}
+
+class GetProfilState extends AuthState {
+  final UserEntity user;
+
+  const GetProfilState(this.user);
+
+  @override
+  List<Object?> get props => [user];
+}

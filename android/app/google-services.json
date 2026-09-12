@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "1061165431728",
+    "project_id": "kdrflutter",
+    "storage_bucket": "kdrflutter.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:1061165431728:android:16a3930f61c639be113475",
+        "android_client_info": {
+          "package_name": "com.example.app_test_with_backend"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyAHcVW7lPgwNiTUAC2atjh1L_3aHXlXw5E"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
