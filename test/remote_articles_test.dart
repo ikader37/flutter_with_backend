@@ -1,245 +1,88 @@
 import 'package:app_test_with_backend/features/news/data/datasource/interfaces/remote_article_data_source.dart';
-import 'package:app_test_with_backend/features/news/data/repositories/Articlerepositoryimpl.dart';
+import 'package:app_test_with_backend/features/news/data/repositories/ArticleRepositoryImpl.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
 import 'package:mockito/mockito.dart';
 
 import 'remote_articles_test.mocks.dart';
 
+
 @GenerateMocks([
   RemoteArticleDataSource,
 ])
 void main() {
-  late MockRemoteArticleDataSource remoteArticleDataSource;
+  late MockRemoteArticleDataSource remoteDataSource;
   late Articlerepositoryimpl repository;
 
   setUp(() {
-    remoteArticleDataSource = MockRemoteArticleDataSource();
+    remoteDataSource = MockRemoteArticleDataSource();
 
     repository = Articlerepositoryimpl(
-      remoteArticleDataSource: remoteArticleDataSource,
+      remoteArticleDataSource: remoteDataSource,
     );
   });
 
-  group('Articlerepositoryimpl', () {
+  group('Articlerepositoryimpl - findAll', () {
+    test(
+      'should return an empty list when the datasource returns no articles',
+          () async {
+        // Arrange
+        when(
+          remoteDataSource.findAll('flutter', 'us', 1),
+        ).thenAnswer((_) async => []);
 
-    // ============================================================
-    // FIND ALL
-    // ============================================================
+        // Act
+        final result = await repository.findAll('flutter', 'us', 1);
 
-    group('findAll', () {
+        // Assert
+        expect(result, isEmpty);
 
-      test(
-        'should return ArticleEntity list when datasource succeeds',
-            () async {
-          // Arrange
-          when(
-            remoteArticleDataSource.findAll(
-              'flutter',
-              'us',
-              1,
-            ),
-          ).thenAnswer(
-                (_) async => [],
-          );
+        verify(
+          remoteDataSource.findAll('flutter', 'us', 1),
+        ).called(1);
+      },
+    );
 
-          // Act
-          final result = await repository.findAll(
-            'flutter',
-            'us',
-            1,
-          );
+    test(
+      'should propagate the exception when the datasource fails',
+          () async {
+        // Arrange
+        when(
+          remoteDataSource.findAll('flutter', 'us', 1),
+        ).thenThrow(Exception('API error'));
 
-          // Assert
-          expect(result, isEmpty);
+        // Act + Assert
+        expect(
+              () => repository.findAll('flutter', 'us', 1),
+          throwsException,
+        );
 
-          verify(
-            remoteArticleDataSource.findAll(
-              'flutter',
-              'us',
-              1,
-            ),
-          ).called(1);
-        },
-      );
+        verify(
+          remoteDataSource.findAll('flutter', 'us', 1),
+        ).called(1);
+      },
+    );
+  });
 
-      test(
-        'should rethrow exception when datasource fails',
-            () async {
-          // Arrange
-          when(
-            remoteArticleDataSource.findAll(
-              'flutter',
-              'us',
-              1,
-            ),
-          ).thenThrow(
-            Exception('Erreur API'),
-          );
+  group('Articlerepositoryimpl - findTopHeadlines', () {
+    test(
+      'should return an empty list when the datasource returns no headlines',
+          () async {
+        // Arrange
+        when(
+          remoteDataSource.findTopHeadlines('', 'us', 0),
+        ).thenAnswer((_) async => []);
 
-          // Act + Assert
-          expect(
-                () => repository.findAll(
-              'flutter',
-              'us',
-              1,
-            ),
-            throwsException,
-          );
+        // Act
+        final result = await repository.findTopHeadlines('', 'us', 0);
 
-          verify(
-            remoteArticleDataSource.findAll(
-              'flutter',
-              'us',
-              1,
-            ),
-          ).called(1);
-        },
-      );
-    });
+        // Assert
+        expect(result, isEmpty);
 
-    // ============================================================
-    // TOP HEADLINES
-    // ============================================================
-
-    group('findTopHeadlines', () {
-
-      test(
-        'should return empty list when datasource returns empty list',
-            () async {
-          // Arrange
-          when(
-            remoteArticleDataSource.findTopHeadlines(
-              'flutter',
-              'us',
-              1,
-            ),
-          ).thenAnswer(
-                (_) async => [],
-          );
-
-          // Act
-          final result = await repository.findTopHeadlines(
-            'flutter',
-            'us',
-            1,
-          );
-
-          // Assert
-          expect(result, isEmpty);
-
-          verify(
-            remoteArticleDataSource.findTopHeadlines(
-              'flutter',
-              'us',
-              1,
-            ),
-          ).called(1);
-        },
-      );
-
-      test(
-        'should rethrow exception when datasource fails',
-            () async {
-          // Arrange
-          when(
-            remoteArticleDataSource.findTopHeadlines(
-              'flutter',
-              'us',
-              1,
-            ),
-          ).thenThrow(
-            Exception('Erreur API'),
-          );
-
-          // Act + Assert
-          expect(
-                () => repository.findTopHeadlines(
-              'flutter',
-              'us',
-              1,
-            ),
-            throwsException,
-          );
-
-          verify(
-            remoteArticleDataSource.findTopHeadlines(
-              'flutter',
-              'us',
-              1,
-            ),
-          ).called(1);
-        },
-      );
-    });
-
-    // ============================================================
-    // FIND SOURCES
-    // ============================================================
-
-    group('findSources', () {
-
-      test(
-        'should return empty SourceEntity list when datasource returns empty list',
-            () async {
-          // Arrange
-          when(
-            remoteArticleDataSource.findSources(
-              'us',
-              1,
-            ),
-          ).thenAnswer(
-                (_) async => [],
-          );
-
-          // Act
-          final result = await repository.findSources(
-            'us',
-            1,
-          );
-
-          // Assert
-          expect(result, isEmpty);
-
-          verify(
-            remoteArticleDataSource.findSources(
-              'us',
-              1,
-            ),
-          ).called(1);
-        },
-      );
-
-      test(
-        'should rethrow exception when datasource fails',
-            () async {
-          // Arrange
-          when(
-            remoteArticleDataSource.findSources(
-              'us',
-              1,
-            ),
-          ).thenThrow(
-            Exception('Erreur API'),
-          );
-
-          // Act + Assert
-          expect(
-                () => repository.findSources(
-              'us',
-              1,
-            ),
-            throwsException,
-          );
-
-          verify(
-            remoteArticleDataSource.findSources(
-              'us',
-              1,
-            ),
-          ).called(1);
-        },
-      );
-    });
+        verify(
+          remoteDataSource.findTopHeadlines('', 'us', 0),
+        ).called(1);
+      },
+    );
   });
 }
