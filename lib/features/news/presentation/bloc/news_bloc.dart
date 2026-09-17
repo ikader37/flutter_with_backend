@@ -39,7 +39,7 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
         emit(LoadedTopHeadLinesState(articles));
       } catch (e) {
 
-        emit(ArticlesErrorState(e.toString()));
+        emit(ArticlesErrorState('Une erreur inattendue est survenue. Veuillez réessayer.'));
       }
     }
 
@@ -54,7 +54,7 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
           page: allNewsEvent.page));
       emit(LoadedNewsState(articles));
     } catch (e) {
-      emit(ArticlesErrorState(e.toString()));
+      emit(ArticlesErrorState('Une erreur inattendue est survenue. Veuillez réessayer.'));
     }
   }
 
@@ -66,7 +66,7 @@ class NewsBloc extends Bloc<NewsEvent, NewsState> {
           country: sourcesEvent.country, page: sourcesEvent.page));
       emit(LoadedSourcesState(sources));
     } catch (e) {
-      emit(ArticlesErrorState(e.toString()));
+      emit(ArticlesErrorState('Une erreur inattendue est survenue. Veuillez réessayer.'));
     }
   }
 }

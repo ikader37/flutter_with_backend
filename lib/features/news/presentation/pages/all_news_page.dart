@@ -44,7 +44,7 @@ class AllNewsPage extends StatelessWidget {
         listener: (context, state) {
           if (state is ArticlesErrorState) {
             ScaffoldMessenger.of(context).showSnackBar(
-              SnackBar(content: Text(state.props[0].toString() + "ERREUR")),
+              SnackBar(content: Text(state.props[0].toString() )),
             );
           }
         },

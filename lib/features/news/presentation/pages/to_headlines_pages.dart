@@ -111,7 +111,7 @@ class ToHeadlinesPages extends StatelessWidget{
            listener: (context,state){
              if(state is ArticlesErrorState){
                // print("ERROR::${state.toString()}");
-               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.props[0].toString()+"ERREUR"),)
+               ScaffoldMessenger.of(context).showSnackBar(SnackBar(content: Text(state.props[0].toString()),)
                );
              }
            }

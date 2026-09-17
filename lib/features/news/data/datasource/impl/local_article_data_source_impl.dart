@@ -1,3 +1,4 @@
+import 'package:app_test_with_backend/core/storage/hive_service.dart';
 import 'package:app_test_with_backend/features/news/data/models/ArticleLocalModel.dart';
 
 import 'package:app_test_with_backend/features/news/data/models/SourceLocalModel.dart';
@@ -35,7 +36,7 @@ class LocalArticleDataSourceImpl<T> implements LocalArticleDataSource{
 
   @override
   Future<List<ArticleLocalModel>> findTopHeadlines(String search, String country, int page) async{
-    final articles = articlesBox.values.toList();
+    final articles = headlinesBox.values.toList();
 
     return _filterArticles(
       articles,
@@ -45,12 +46,29 @@ class LocalArticleDataSourceImpl<T> implements LocalArticleDataSource{
   }
 
   @override
-  Future<void> createAll(List<ArticleLocalModel> articles)async {
-    final data = <String, ArticleLocalModel>{
-      for (final article in articles)
-        article.title: article,
-    };
-    await articlesBox.putAll(data);
+  Future<void> createAll(List<ArticleLocalModel> articles) async {
+    try {
+      print('LOCAL DATA ::: ${articles.length}');
+
+      if (!articlesBox.isOpen) {
+        throw Exception('La box articles n\'est pas ouverte');
+      }
+
+      final data = <String, ArticleLocalModel>{
+        for (final article in articles)
+          article.title: article,
+      };
+
+
+      await articlesBox.putAll(data);
+
+      print('HIVE ::: écriture terminée');
+      print('HIVE ::: nombre dans la box = ${articlesBox.length}');
+    } catch (e, stackTrace) {
+      print('HIVE ERROR ::: $e');
+      print(stackTrace);
+      rethrow;
+    }
   }
 
   @override
@@ -93,5 +111,36 @@ class LocalArticleDataSourceImpl<T> implements LocalArticleDataSource{
     return result.sublist(start, end);
 
 }
+
+  @override
+  Future<List<SourceLocalModel>> findSources() async{
+    return await sourcesBox.values.toList();
+  }
+
+  @override
+  Future<void> createTopHeadlines(List<ArticleLocalModel> articles) async{
+    try {
+      print('LOCAL DATA ::: ${articles.length}');
+
+      if (!headlinesBox.isOpen) {
+        throw Exception('La box articles n\'est pas ouverte');
+      }
+
+      final data = <String, ArticleLocalModel>{
+        for (final article in articles)
+          article.title: article,
+      };
+
+
+      await headlinesBox.putAll(data);
+
+      print('HIVE ::: écriture terminée');
+      print('HIVE ::: nombre dans la box = ${headlinesBox.length}');
+    } catch (e, stackTrace) {
+      print('HIVE ERROR ::: $e');
+      print(stackTrace);
+      rethrow;
+    }
+  }
 
 }

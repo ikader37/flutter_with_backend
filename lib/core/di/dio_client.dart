@@ -1,3 +1,4 @@
+import 'package:app_test_with_backend/core/network/interceptors/auth_interceptor.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_secure_storage/flutter_secure_storage.dart';
 
@@ -23,38 +24,9 @@ class DioClient {
     );
 
     dio.interceptors.add(
-      InterceptorsWrapper(
-        onRequest: (options, handler) async {
-          print('[DIO] --> ${options.method} ${options.path}');
-
-          final token = await storage.read(
-            key: 'access_token',
-          );
-
-          if (token != null) {
-            options.headers['Authorization'] = 'Bearer $token';
-          }
-
-          handler.next(options);
-        },
-
-        onResponse: (response, handler) {
-          print('[DIO] <-- ${response.statusCode}');
-          handler.next(response);
-        },
-
-        onError: (e, handler) async {
-          print(
-            '[DIO] ERREUR : ${e.type} - ${e.message}',
-          );
-
-          if (e.response?.statusCode == 401) {
-            await storage.deleteAll();
-          }
-
-          handler.next(e);
-        },
+      AuthInterceptor(
+        storage: storage,
       ),
-    );
+      );
   }
 }

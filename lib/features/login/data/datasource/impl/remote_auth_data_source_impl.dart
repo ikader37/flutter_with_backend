@@ -25,12 +25,11 @@ class RemoteAuthDataSourceImpl implements RemoteAuthDataSource {
 
       if (user != null) {
         final idToken = await user.getIdToken();
-        await _storage.write(key: 'token', value: idToken);
+        await _storage.write(key: 'access_token', value: idToken);
       }
 
       return UserModel(email: email, password: password, name: "");
     } on FirebaseAuthException catch (e) {
-      print('Erreur Auth: ${e.code} — ${e.message}');
       switch(e.code){
         case 'weak-password':
           throw Exception("Mot de passe trop court.");

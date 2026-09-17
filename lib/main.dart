@@ -38,7 +38,9 @@ import 'firebase_options.dart';
 void main() async{
   // Indispensable avant toute interaction avec le code natif
   WidgetsFlutterBinding.ensureInitialized();
-  await Hive.initFlutter();
+   await Hive.initFlutter();
+  HiveService.init();
+
 
   final articlesBox = await Hive.openBox<ArticleLocalModel>('articles');
   final sourcesBox = await Hive.openBox<SourceLocalModel>('sources');
@@ -66,8 +68,8 @@ final _registerRepository=RegisterRepositoryImpl(remoteRegister:registerDataSour
 
 
   final dio=DioClient(storage: storage);
-  final _remote_article=RemoteArticleDataSourceImpl(dio:dio ,localArticleDataSource: localDataSource);
-  final _articleRepository=Articlerepositoryimpl(remoteArticleDataSource:_remote_article);
+  final _remote_article=RemoteArticleDataSourceImpl(dio:dio);
+  final _articleRepository=Articlerepositoryimpl(remoteArticleDataSource:_remote_article,localArticleDataSource: localDataSource);
 
 
   final TopHeadLinesUseCase _topHeadLinesUseCase=TopHeadLinesUseCase(_articleRepository);
@@ -78,6 +80,7 @@ final _registerRepository=RegisterRepositoryImpl(remoteRegister:registerDataSour
   await Firebase.initializeApp(
     options: DefaultFirebaseOptions.currentPlatform,
   );
+
   runApp(
     MultiBlocProvider(
         providers: [

@@ -10,6 +10,8 @@ class HiveService {
 
   static Future<void> init() async {
     await Hive.initFlutter();
+    Hive.registerAdapter(ArticleLocalModelAdapter());
+    Hive.registerAdapter(SourceLocalModelAdapter());
 
     await Hive.openBox<ArticleLocalModel>(headlinesBox);
     await Hive.openBox<ArticleLocalModel>(allBox);
