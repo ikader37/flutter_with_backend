@@ -1,94 +1,213 @@
 # Flutter With Backend 🚀
 
-Application mobile développée avec **Flutter** dans le cadre d'un projet d'apprentissage de l'architecture logicielle, de la consommation d'API REST, de l'authentification Firebase et de la persistance locale.
+Application mobile développée avec **Flutter** dans le cadre d'un projet d'apprentissage de la **Clean Architecture**, de la consommation d'API REST, de l'authentification Firebase, de la gestion d'état avec BLoC et de la persistance locale avec Hive.
 
-L'application permet notamment de consulter des actualités provenant d'une API distante, de gérer l'authentification des utilisateurs et de conserver certaines données localement afin d'améliorer l'expérience utilisateur.
-
----
-
-## 📱 Présentation
-
-**Flutter With Backend** est une application Flutter organisée autour d'une architecture modulaire et maintenable.
-
-Le projet met en œuvre plusieurs concepts importants du développement Flutter moderne :
-
-* 📰 Consommation d'une API REST d'actualités
-* 🔐 Authentification avec Firebase
-* 💾 Stockage local avec Hive
-* 🌐 Communication HTTP avec Dio
-* 🧠 Gestion d'état avec BLoC
-* 🏗️ Clean Architecture
-* 🧭 Navigation avec GoRouter
-* 🧪 Tests unitaires
-* 🔒 Stockage sécurisé des informations d'authentification
-* 📱 Interface adaptée aux différentes tailles d'écran
+L'application permet de consulter des actualités provenant de **NewsAPI**, de rechercher des articles, de consulter les sources disponibles, de gérer l'authentification des utilisateurs et de consulter les données précédemment récupérées même lorsque le réseau est indisponible.
 
 ---
 
-## ✨ Fonctionnalités
+## 📱 Fonctionnalités
 
 ### 🔐 Authentification
 
-L'application permet à l'utilisateur de :
+L'application utilise **Firebase Authentication** pour gérer les utilisateurs.
 
-* créer un compte ;
-* se connecter ;
-* se déconnecter ;
-* récupérer les informations de son compte ;
-* consulter son profil ;
-* conserver son état d'authentification ;
-* accéder automatiquement à l'application lorsqu'une session valide existe.
+Fonctionnalités disponibles :
 
-L'authentification repose sur **Firebase Authentication**.
+* Création de compte
+* Connexion
+* Déconnexion
+* Consultation du profil utilisateur
+* Récupération de l'adresse e-mail de l'utilisateur connecté
+* Conservation sécurisée du token d'authentification
+* Redirection automatique selon l'état d'authentification
+* Protection des routes nécessitant une authentification
+
+Les informations sensibles liées à l'authentification sont conservées avec `FlutterSecureStorage`.
 
 ---
 
 ### 📰 Actualités
 
-L'application récupère les actualités depuis une API REST.
+L'application utilise **NewsAPI** pour récupérer les actualités.
 
-Les fonctionnalités principales sont :
+Fonctionnalités :
 
-* affichage des actualités principales ;
-* recherche d'articles ;
-* consultation de toutes les actualités ;
-* consultation des sources ;
-* pagination ;
-* gestion des états `loading`, `success` et `error`.
+* 📰 Top Headlines
+* 🔎 Recherche d'articles
+* 🌍 Consultation de toutes les actualités
+* 🗂️ Consultation des sources
+* 📄 Pagination
+* 🔄 Actualisation des données
+* ⏳ Gestion de l'état de chargement
+* ❌ Gestion des erreurs réseau
+* 💾 Mise en cache locale
 
-Les requêtes HTTP sont réalisées avec **Dio**.
-
----
-
-### 💾 Persistance locale
-
-**Hive** est utilisé pour conserver localement certaines données récupérées depuis l'API.
-
-L'objectif est notamment de permettre :
-
-* la consultation de données déjà récupérées ;
-* la réduction des appels réseau inutiles ;
-* une meilleure expérience en cas de connexion instable ;
-* la séparation entre les données distantes et les données locales.
+Les requêtes HTTP sont effectuées avec **Dio**.
 
 ---
 
-## 🏗️ Architecture
+## 🌐 Gestion des erreurs réseau
 
-Le projet suit une approche basée sur la **Clean Architecture**.
+Les erreurs réseau sont interceptées au niveau de la couche Data/Repository.
 
-L'organisation générale peut être représentée ainsi :
+Les erreurs Dio telles que :
+
+* absence de connexion Internet ;
+* timeout de connexion ;
+* timeout de réception ;
+* erreur HTTP ;
+* serveur indisponible ;
+
+sont transformées en messages compréhensibles pour l'utilisateur.
+
+Exemples de messages :
+
+```text
+Impossible de se connecter à Internet.
+
+La connexion a pris trop de temps.
+
+Le serveur a rencontré un problème.
+
+Une erreur réseau est survenue.
+```
+
+Le BLoC expose ensuite un état d'erreur permettant à l'interface d'afficher le message à l'utilisateur, notamment via un `SnackBar` ou un état d'erreur dédié.
+
+---
+
+# 💾 Mode hors-ligne
+
+L'application utilise **Hive CE** comme cache local.
+
+Les données récupérées depuis NewsAPI sont enregistrées localement après une récupération réussie.
+
+Le fonctionnement est le suivant :
+
+```text
+                    ┌─────────────────┐
+                    │    Utilisateur  │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │      BLoC       │
+                    └────────┬────────┘
+                             │
+                             ▼
+                    ┌─────────────────┐
+                    │   Repository    │
+                    └────────┬────────┘
+                             │
+                    ┌────────┴────────┐
+                    │                 │
+                    ▼                 ▼
+              ┌───────────┐     ┌───────────┐
+              │ NewsAPI   │     │    Hive   │
+              │   Dio     │     │   Cache   │
+              └─────┬─────┘     └─────┬─────┘
+                    │                 │
+                    │ succès          │ fallback
+                    ▼                 ▼
+              ┌──────────────────────────┐
+              │     ArticleEntity        │
+              └────────────┬─────────────┘
+                           │
+                           ▼
+                          UI
+```
+
+### Lorsque Internet fonctionne
+
+```text
+NewsAPI
+   ↓
+RemoteDataSource
+   ↓
+ArticleRepository
+   ↓
+Sauvegarde Hive
+   ↓
+ArticleEntity
+   ↓
+BLoC
+   ↓
+UI
+```
+
+### Lorsque Internet est indisponible
+
+```text
+NewsAPI
+   ↓
+Erreur réseau
+   ↓
+ArticleRepository
+   ↓
+Lecture du cache Hive
+   ↓
+ArticleLocalModel
+   ↓
+ArticleEntity
+   ↓
+BLoC
+   ↓
+UI
+```
+
+Ainsi, les dernières données disponibles peuvent continuer à être affichées lorsque l'API n'est pas accessible.
+
+Si aucune donnée locale n'est disponible, l'application affiche un message d'erreur à l'utilisateur.
+
+---
+
+## 🗃️ Organisation des données Hive
+
+Les données locales sont séparées dans plusieurs boxes :
+
+```text
+Hive
+│
+├── articles
+├── headlines
+└── sources
+```
+
+Les modèles locaux utilisent des `TypeAdapter` Hive afin de permettre leur sérialisation et leur désérialisation.
+
+Exemple :
+
+```dart
+@HiveType(typeId: 1)
+class SourceLocalModel extends HiveObject {
+  @HiveField(0)
+  final String id;
+
+  @HiveField(1)
+  final String name;
+}
+```
+
+Les adapters sont générés avec `build_runner`.
+
+---
+
+# 🏗️ Architecture
+
+Le projet suit les principes de la **Clean Architecture**.
 
 ```text
 lib/
 │
 ├── core/
+│   ├── errors/
 │   ├── network/
 │   ├── storage/
-│   ├── errors/
 │   └── ...
 │
 ├── features/
+│   │
 │   ├── auth/
 │   │   ├── data/
 │   │   │   ├── datasource/
@@ -124,82 +243,76 @@ lib/
 └── main.dart
 ```
 
-### Principe de fonctionnement
-
-```text
-             ┌──────────────────┐
-             │   Presentation   │
-             │  Pages / Widgets │
-             └────────┬─────────┘
-                      │
-                      ▼
-             ┌──────────────────┐
-             │       BLoC       │
-             │  Events/States   │
-             └────────┬─────────┘
-                      │
-                      ▼
-             ┌──────────────────┐
-             │     UseCases     │
-             └────────┬─────────┘
-                      │
-                      ▼
-             ┌──────────────────┐
-             │   Repository     │
-             │    Interface     │
-             └────────┬─────────┘
-                      │
-              ┌───────┴────────┐
-              ▼                ▼
-       ┌─────────────┐  ┌─────────────┐
-       │ Remote Data │  │ Local Data  │
-       │    Source   │  │    Source   │
-       └──────┬──────┘  └──────┬──────┘
-              │                │
-              ▼                ▼
-          ┌───────┐         ┌───────┐
-          │ Dio   │         │ Hive  │
-          └───────┘         └───────┘
-```
-
-Cette séparation permet de limiter le couplage entre l'interface utilisateur, la logique métier et les sources de données.
-
 ---
 
-## 🧠 Gestion d'état avec BLoC
-
-Le projet utilise **BLoC** pour gérer les états de l'application.
-
-Par exemple, la fonctionnalité des actualités peut suivre le cycle :
+## 🔄 Flux de données
 
 ```text
-User Action
-     │
-     ▼
-   Event
-     │
-     ▼
-    BLoC
-     │
-     ▼
-  UseCase
-     │
-     ▼
- Repository
-     │
- ┌───┴───────────┐
+UI
+ │
+ ▼
+BLoC
+ │
+ ▼
+UseCase
+ │
+ ▼
+Repository
+ │
+ ├───────────────┐
  ▼               ▼
-API             Hive
+Remote          Local
+DataSource      DataSource
+ │               │
+ ▼               ▼
+Dio             Hive
  │               │
  └───────┬───────┘
          ▼
-       State
+      Entity
          │
          ▼
-       UI
+        BLoC
+         │
+         ▼
+         UI
 ```
 
-Les états permettent notamment de gérer :
+Cette séparation permet de maintenir une séparation claire entre :
+
+* présentation ;
+* logique métier ;
+* accès aux données ;
+* API distante ;
+* stockage local.
+
+---
+
+# 🧠 Gestion d'état avec BLoC
+
+La gestion d'état est assurée par **flutter_bloc**.
+
+Le cycle principal est :
+
+```text
+Event
+  ↓
+BLoC
+  ↓
+UseCase
+  ↓
+Repository
+  ↓
+DataSource
+  ↓
+Result
+  ↓
+State
+  ↓
+UI
+```
+
+Les états prennent notamment en compte :
 
 ```text
 Initial
@@ -208,64 +321,95 @@ Success
 Error
 ```
 
----
-
-## 🌐 API
-
-L'application utilise une API REST pour récupérer les actualités.
-
-Les appels sont réalisés avec `Dio`.
-
-Exemple de configuration :
-
-```dart
-final dio = Dio(
-  BaseOptions(
-    baseUrl: 'https://newsapi.org/v2/',
-  ),
-);
-```
-
-Les requêtes peuvent notamment être utilisées pour récupérer :
-
-* les principales actualités ;
-* toutes les actualités ;
-* les sources disponibles.
-
-> ⚠️ La clé API ne doit jamais être commitée directement dans le dépôt Git.
-
-Il est recommandé d'utiliser une variable d'environnement, un fichier de configuration non versionné ou un mécanisme sécurisé adapté à l'environnement de déploiement.
+Les erreurs réseau sont remontées au BLoC afin d'être affichées dans l'interface utilisateur.
 
 ---
 
-## 🔐 Firebase Authentication
+# 🌐 API NewsAPI
 
-Firebase Authentication est utilisé pour gérer les comptes utilisateurs.
+L'application utilise l'API REST de NewsAPI.
 
-Le projet prend notamment en charge :
+Base URL :
 
 ```text
-Register
-   │
-   ▼
-Firebase Authentication
-   │
-   ▼
-User authenticated
-   │
-   ▼
-Application
+https://newsapi.org/v2/
 ```
 
-Les informations nécessaires à la session peuvent également être conservées de manière sécurisée.
+Endpoints utilisés selon les fonctionnalités :
+
+```text
+/top-headlines
+/everything
+/top-headlines/sources
+```
+
+La communication HTTP est réalisée avec Dio.
 
 ---
 
-## 🔒 Stockage sécurisé
+# 🔑 Configuration de NewsAPI
 
-Les informations sensibles liées à l'authentification ne doivent pas être stockées directement dans Hive ou dans des préférences classiques.
+Une clé API NewsAPI est nécessaire pour utiliser les fonctionnalités d'actualités.
 
-Le projet peut utiliser `FlutterSecureStorage` pour conserver les informations sensibles.
+Vous pouvez obtenir une clé depuis le site officiel de NewsAPI :
+
+[NewsAPI](https://newsapi.org/?utm_source=chatgpt.com)
+
+### ⚠️ Sécurité
+
+Ne commitez jamais votre clé API dans Git :
+
+```dart
+apiKey: 'ma-cle-secrete'
+```
+
+Utilisez plutôt le mécanisme de configuration prévu par votre environnement et assurez-vous que les fichiers contenant des secrets ne sont pas versionnés.
+
+---
+
+# 🔥 Configuration Firebase
+
+Le projet utilise Firebase Authentication.
+
+Avant de lancer l'application, créez/configurez un projet Firebase et ajoutez l'application Android et/ou iOS correspondante.
+
+### Android
+
+Ajouter :
+
+```text
+android/app/google-services.json
+```
+
+### iOS
+
+Ajouter :
+
+```text
+ios/Runner/GoogleService-Info.plist
+```
+
+Vérifiez également que le package/application ID configuré dans Firebase correspond à celui de l'application Flutter.
+
+Dans Firebase Console, activez le fournisseur :
+
+```text
+Authentication
+    ↓
+Sign-in method
+    ↓
+Email/Password
+```
+
+Les fichiers Firebase contenant des informations spécifiques à votre projet ne doivent pas être remplacés par ceux d'un autre environnement.
+
+---
+
+# 🔒 Stockage sécurisé
+
+Les informations sensibles liées à l'authentification ne sont pas destinées à être stockées dans Hive.
+
+Le projet utilise `FlutterSecureStorage` pour les informations sensibles telles que le token.
 
 Exemple :
 
@@ -278,7 +422,7 @@ await storage.write(
 );
 ```
 
-Puis :
+Lecture :
 
 ```dart
 final token = await storage.read(
@@ -288,180 +432,102 @@ final token = await storage.read(
 
 ---
 
-## 💾 Hive
+# 🔑 Authentification et token HTTP
 
-Hive est utilisé comme solution de stockage local.
+Le client Dio peut utiliser un interceptor afin d'ajouter automatiquement le token d'authentification aux requêtes nécessitant une authentification.
 
-Les données peuvent être séparées selon leur fonctionnalité :
+Le principe est :
 
 ```text
-Hive
-│
-├── headlines
-├── all
-└── sources
+Firebase Authentication
+        ↓
+      Token
+        ↓
+FlutterSecureStorage
+        ↓
+     Dio Interceptor
+        ↓
+Authorization Header
+        ↓
+       API
 ```
 
-Cette séparation permet d'avoir un cache local indépendant pour les différentes catégories d'actualités.
+Cela évite de répéter manuellement l'ajout du token dans chaque requête.
 
 ---
 
-## 🧭 Navigation
+# 🧭 Navigation
 
-La navigation est réalisée avec **GoRouter**.
+La navigation est gérée avec **GoRouter**.
 
-Les principales destinations de l'application sont organisées autour de pages telles que :
+Principales routes :
 
 ```text
 /
-├── login
-├── register
-├── profile
-├── headlines
-├── all
-└── sources
+├── /login
+├── /register
+├── /headlines
+├── /all-news
+├── /sources
+└── /profil
 ```
 
-La navigation permet également de protéger certaines routes en fonction de l'état d'authentification de l'utilisateur.
+La navigation prend en compte l'état d'authentification lorsque cela est nécessaire.
 
 ---
 
-## 🛠️ Technologies utilisées
+# 🧪 Tests
 
-| Technologie            | Utilisation                    |
-| ---------------------- | ------------------------------ |
-| Flutter                | Framework mobile               |
-| Dart                   | Langage                        |
-| BLoC                   | Gestion d'état                 |
-| Firebase Auth          | Authentification               |
-| Dio                    | Client HTTP                    |
-| Hive                   | Base de données locale / cache |
-| Flutter Secure Storage | Stockage sécurisé              |
-| GoRouter               | Navigation                     |
-| Mockito                | Tests et mocks                 |
-| Flutter Test           | Tests unitaires                |
+Le projet contient des tests unitaires utilisant :
 
----
+* `flutter_test`
+* `Mockito`
 
-## 📦 Installation
+Les tests couvrent notamment la couche Repository/DataSource.
 
-### 1. Cloner le projet
+Exemples de scénarios testés :
 
-```bash
-git clone https://github.com/ikader37/flutter_with_backen.git
-```
-
-Puis :
-
-```bash
-cd flutter_with_backen
-```
-
----
-
-### 2. Installer les dépendances
-
-```bash
-flutter pub get
-```
-
----
-
-### 3. Vérifier l'environnement Flutter
-
-```bash
-flutter doctor
-```
-
-Vérifiez que Flutter, Android Studio/Xcode et les outils nécessaires sont correctement configurés.
-
----
-
-### 4. Configurer Firebase
-
-Le projet nécessite une configuration Firebase.
-
-Pour Android, ajouter le fichier :
+### Repository
 
 ```text
-android/app/google-services.json
+✓ retourne les articles provenant de la source distante
+✓ retourne une liste vide lorsque l'API ne retourne aucun article
+✓ gère les erreurs de la source distante
+✓ récupère les données du cache lorsque le réseau échoue
+✓ utilise la source locale en mode hors-ligne
 ```
 
-Pour iOS :
+### Test du mode hors-ligne
+
+Le scénario suivant est notamment vérifié :
 
 ```text
-ios/Runner/GoogleService-Info.plist
+RemoteDataSource
+      │
+      └── erreur réseau
+             ↓
+       LocalDataSource
+             ↓
+       données Hive
+             ↓
+       ArticleEntity
 ```
 
-Puis vérifier que Firebase est correctement initialisé dans l'application.
+Cela permet de vérifier que les données déjà mises en cache peuvent être utilisées lorsque l'API distante n'est plus disponible.
 
-> Ne publiez pas de fichiers contenant des secrets ou des credentials sensibles dans un dépôt public.
-
----
-
-### 5. Configurer la clé News API
-
-Si l'application utilise NewsAPI, configurez votre clé API selon le mécanisme de configuration prévu par le projet.
-
-Exemple :
-
-```text
-NEWS_API_KEY=xxxxxxxxxxxxxxxx
-```
-
-Évitez de placer directement la clé dans le code source.
-
----
-
-## ▶️ Lancer l'application
-
-Pour lancer l'application sur un appareil ou un émulateur :
-
-```bash
-flutter run
-```
-
-Pour vérifier les appareils disponibles :
-
-```bash
-flutter devices
-```
-
----
-
-## 🧪 Tests
-
-Le projet contient des tests permettant notamment de vérifier les composants de la couche Data.
-
-Pour lancer tous les tests :
+### Lancer les tests
 
 ```bash
 flutter test
 ```
 
-Pour lancer un fichier de test spécifique :
-
-```bash
-flutter test test/remote_articles_test.dart
-```
-
-Pour générer les fichiers Mockito lorsque le projet utilise la génération de mocks :
+### Générer les mocks Mockito
 
 ```bash
 dart run build_runner build --delete-conflicting-outputs
 ```
 
----
-
-## 🔄 Génération de code
-
-Lorsque le projet utilise des générateurs Dart, exécuter :
-
-```bash
-dart run build_runner build --delete-conflicting-outputs
-```
-
-Pour travailler en mode automatique :
+### Mode automatique
 
 ```bash
 dart run build_runner watch --delete-conflicting-outputs
@@ -469,81 +535,113 @@ dart run build_runner watch --delete-conflicting-outputs
 
 ---
 
-## 📂 Flux de données
+# 📦 Installation
 
-Lorsqu'un utilisateur demande des actualités :
+## 1. Cloner le projet
 
-```text
-UI
- │
- ▼
-NewsBloc
- │
- ▼
-TopHeadlinesUseCase
- │
- ▼
-ArticleRepository
- │
- ▼
-Local / Remote DataSource
- │
- ├───────────────┐
- ▼               ▼
-Hive            Dio
- │               │
- │          News API
- │               │
- └───────┬───────┘
-         ▼
-       Entity
-         │
-         ▼
-       BLoC
-         │
-         ▼
-         UI
+```bash
+git clone https://github.com/ikader37/flutter_with_backend.git
 ```
 
-L'utilisation d'une source locale et d'une source distante permet de mettre en place progressivement une stratégie de cache.
+Puis :
+
+```bash
+cd flutter_with_backend
+```
+
+## 2. Installer les dépendances
+
+```bash
+flutter pub get
+```
+
+## 3. Vérifier Flutter
+
+```bash
+flutter doctor
+```
+
+## 4. Configurer Firebase
+
+Ajouter les fichiers Firebase correspondant à votre application :
+
+```text
+android/app/google-services.json
+ios/Runner/GoogleService-Info.plist
+```
+
+## 5. Configurer NewsAPI
+
+Ajouter la clé API selon le mécanisme de configuration utilisé par votre environnement.
+
+## 6. Générer le code
+
+```bash
+dart run build_runner build --delete-conflicting-outputs
+```
+
+## 7. Lancer l'application
+
+```bash
+flutter run
+```
 
 ---
 
-## 🎯 Objectifs pédagogiques
+# 🛠️ Technologies utilisées
 
-Ce projet a notamment pour objectif de mettre en pratique :
-
-* la Clean Architecture ;
-* les principes SOLID ;
-* l'injection de dépendances ;
-* la séparation Data / Domain / Presentation ;
-* la gestion d'état avec BLoC ;
-* la consommation d'une API REST ;
-* l'authentification Firebase ;
-* la persistance locale avec Hive ;
-* le stockage sécurisé ;
-* la navigation déclarative avec GoRouter ;
-* les tests unitaires et les mocks.
-
----
-
+| Technologie             | Utilisation                 |
+| ----------------------- | --------------------------- |
+| Flutter                 | Framework mobile            |
+| Dart                    | Langage                     |
+| BLoC                    | Gestion d'état              |
+| Clean Architecture      | Organisation du projet      |
+| Firebase Authentication | Authentification            |
+| Dio                     | Communication HTTP          |
+| NewsAPI                 | API d'actualités            |
+| Hive CE                 | Cache et persistance locale |
+| Flutter Secure Storage  | Stockage sécurisé           |
+| GoRouter                | Navigation                  |
+| Mockito                 | Mocking pour les tests      |
+| Flutter Test            | Tests unitaires             |
 
 ---
 
-## 📌 Prérequis
+# 🎯 Objectifs pédagogiques
 
-Avant de lancer le projet, il est recommandé d'avoir :
+Ce projet permet de mettre en pratique :
 
-* Flutter installé ;
-* Dart installé ;
+* Clean Architecture ;
+* principes SOLID ;
+* séparation Data / Domain / Presentation ;
+* injection de dépendances ;
+* gestion d'état avec BLoC ;
+* consommation d'une API REST ;
+* gestion des erreurs réseau ;
+* authentification Firebase ;
+* stockage sécurisé ;
+* persistance locale avec Hive ;
+* stratégie de cache et mode hors-ligne ;
+* navigation avec GoRouter ;
+* tests unitaires ;
+* mocks avec Mockito.
+
+---
+
+# 📋 Prérequis
+
+Avant de lancer le projet, installer :
+
+* Flutter SDK ;
+* Dart SDK ;
 * Android Studio ou Xcode ;
-* un émulateur ou un appareil physique ;
+* un émulateur Android ou un appareil physique ;
 * un projet Firebase configuré ;
-* une clé API NewsAPI valide.
+* une clé NewsAPI.
 
 ---
 
-## 👨‍💻 Auteur
+# 👨‍💻 Auteur
 
 **Abdoul Kader IKADER**
 
@@ -551,16 +649,14 @@ Projet Flutter personnel / pédagogique.
 
 GitHub :
 
-[https://github.com/ikader37](https://github.com/ikader37?utm_source=chatgpt.com)
+[ikader37](https://github.com/ikader37?utm_source=chatgpt.com)
 
-Dépôt du projet :
+Repository :
 
-[flutter_with_backen](https://github.com/ikader37/flutter_with_backen.git?utm_source=chatgpt.com)
+[flutter_with_backend](https://github.com/ikader37/flutter_with_backend?utm_source=chatgpt.com)
 
 ---
 
 ## 📄 Licence
 
-Ce projet est destiné principalement à un usage pédagogique et expérimental.
-
-La licence peut être adaptée selon les besoins du projet.
+Ce projet est principalement destiné à un usage pédagogique et expérimental.
