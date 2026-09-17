@@ -18,11 +18,13 @@ class RemoteArticleDataSourceImpl implements RemoteArticleDataSource{
   Future<List<ArticleModel>> findAll(String search, String country, int page) async{
     // TODO: implement findAll
     try {
+      print("FIND ALL PAGE::${page} SEARCH:${search}");
       final response = await dio.dio.get(
-          "/everything?country=${country}&page=${page}&apiKey=437444ccfcf747bdb2f48239558a9f3a");
-      print("FIND ALLL:${response.data.length}");
+          "/everything?q=app&apiKey=437444ccfcf747bdb2f48239558a9f3a");
+      print("FIND ALLL:${response.data}");
       if (response.statusCode == 200) {
-        final result = (response.data as List).map((element) =>
+        print("DDDD");
+        final result = (response.data['articles'] as List).map((element) =>
             ArticleModel.fromJson(element)).toList();
         return result;
       }
@@ -30,23 +32,27 @@ class RemoteArticleDataSourceImpl implements RemoteArticleDataSource{
         throw handleNetworkException("Erreur d'internet");
       }
     }catch(e){
+      print("exception 3:::${e.toString()}");
       throw handleNetworkException(e);
-          }
-
+    }
   }
 
   @override
   Future<List<SourceModel>> findSources(String country, int page) async{
-    final response= await dio.dio.get("/sources?country=${country}&page=${page}&apiKey=437444ccfcf747bdb2f48239558a9f3a");
-    
-    
-    if(response.statusCode==200){
-      return (response.data as List).map((element)=>SourceModel.fromJson(element)).toList();
-
-    }else{
-
+    print("SOURCES");
+    try{
+      final response= await dio.dio.get("/sources?country=${country}&page=${page}&apiKey=437444ccfcf747bdb2f48239558a9f3a");
+      if(response.statusCode==200){
+        print("RESPONSE:::${response}");
+        return (response.data['sources'] as List).map((element)=>SourceModel.fromJson(element)).toList();
+      }else{
+        throw handleNetworkException("Erreur d'internet");
+      }
+    }catch(e){
+      print("exception 3:::${e.toString()}");
+      throw handleNetworkException(e);
     }
-    throw UnimplementedError();
+
 
   }
 

@@ -7,10 +7,10 @@ part 'SourceLocalModel.g.dart';
 @HiveType(typeId: 1)
 class SourceLocalModel extends HiveObject{
   @HiveField(0)
-   final String  id="";
+   final String  id;
   @HiveField(1)
-   final String name="";
-  SourceLocalModel({required id,required name});
+   final String name;
+  SourceLocalModel({required this.id,required this.name});
 
    // SourceLocalModel.name(this.id, this.name);
 

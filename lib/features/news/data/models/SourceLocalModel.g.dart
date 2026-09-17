@@ -17,8 +17,8 @@ class SourceLocalModelAdapter extends TypeAdapter<SourceLocalModel> {
       for (int i = 0; i < numOfFields; i++) reader.readByte(): reader.read(),
     };
     return SourceLocalModel(
-      id: fields[0] as dynamic,
-      name: fields[1] as dynamic,
+      id: fields[0] as String,
+      name: fields[1] as String,
     );
   }
 

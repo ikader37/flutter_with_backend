@@ -73,12 +73,16 @@ class LocalArticleDataSourceImpl<T> implements LocalArticleDataSource{
 
   @override
   Future<void> createSources(List<SourceLocalModel> sources) async{
+    print("OBJECT:::${sources.length}");
     final data = <String, SourceLocalModel>{
       for (final source in sources)
-        source.id: source,
+        source.id: source
     };
 
     await sourcesBox.putAll(data);
+    final savedSources = sourcesBox.values.toList();
+
+    print('HIVE : données relues = ${savedSources.length}');
   }
 
   List<ArticleLocalModel> _filterArticles(
@@ -136,6 +140,8 @@ class LocalArticleDataSourceImpl<T> implements LocalArticleDataSource{
 
       print('HIVE ::: écriture terminée');
       print('HIVE ::: nombre dans la box = ${headlinesBox.length}');
+      print('HIVE ::: nombre reelle dans la box = ${headlinesBox.values.toList().length}');
+
     } catch (e, stackTrace) {
       print('HIVE ERROR ::: $e');
       print(stackTrace);
