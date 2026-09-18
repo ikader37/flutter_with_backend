@@ -1,5 +1,6 @@
 import 'package:app_test_with_backend/features/news/data/datasource/interfaces/local_article_data_source.dart';
 import 'package:app_test_with_backend/features/news/data/datasource/interfaces/remote_article_data_source.dart';
+import 'package:app_test_with_backend/features/news/data/repositories/ArticleRepositoryImpl.dart';
 import 'package:dio/dio.dart';
 import 'package:flutter_test/flutter_test.dart';
 import 'package:mockito/annotations.dart';
@@ -7,7 +8,6 @@ import 'package:mockito/mockito.dart';
 
 import 'package:app_test_with_backend/features/news/data/models/ArticleLocalModel.dart';
 import 'package:app_test_with_backend/features/news/data/models/SourceLocalModel.dart';
-import 'package:app_test_with_backend/features/news/data/repositories/Articlerepositoryimpl.dart';
 
 import 'article_repository_test.mocks.dart';
 
@@ -161,4 +161,36 @@ void main() {
       },
     );
   });
+
+  test(
+    '4. should return top headlines from remote datasource',
+        () async {
+      // Arrange
+      when(
+        remoteDataSource.findTopHeadlines('', 'us', 0),
+      ).thenAnswer((_) async => []);
+
+      when(
+        localDataSource.createAll(any),
+      ).thenAnswer((_) async {});
+
+      // Act
+      final result = await repository.findTopHeadlines(
+        '',
+        'us',
+        0,
+      );
+
+      // Assert
+      expect(result, isEmpty);
+
+      verify(
+        remoteDataSource.findTopHeadlines('', 'us', 0),
+      ).called(1);
+
+      verify(
+        localDataSource.createAll(any),
+      ).called(1);
+    },
+  );
 }
